@@ -1,10 +1,13 @@
 package com.yuexin.accounts.controller;
 
+import com.yuexin.accounts.dto.AccountsContactInfoDto;
 import com.yuexin.accounts.dto.CustomerDto;
 import com.yuexin.accounts.dto.ResponseDto;
 import com.yuexin.accounts.service.IAccountsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -16,10 +19,18 @@ import static com.yuexin.accounts.constants.AccountsConstants.*;
 @RequestMapping("/api")
 @Validated
 public class AccountsController {
-    private final IAccountsService iAccountsService;
 
-    public AccountsController(IAccountsService iAccountsService) {
+    @Value("${build.version}")
+    private String buildVersion;
+
+    private final IAccountsService iAccountsService;
+    private final Environment environment;
+    private final AccountsContactInfoDto accountsContactInfoDto;
+
+    public AccountsController(IAccountsService iAccountsService, Environment environment, AccountsContactInfoDto accountsContactInfoDto) {
         this.iAccountsService = iAccountsService;
+        this.environment = environment;
+        this.accountsContactInfoDto = accountsContactInfoDto;
     }
 
     @PostMapping("/create")
@@ -69,5 +80,20 @@ public class AccountsController {
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(new ResponseDto(STATUS_417, MESSAGE_DELETE_417));
         }
+    }
+
+    @GetMapping("/build-info")
+    public ResponseEntity<String> getBuildInfo() {
+        return ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+    }
+
+    @GetMapping("/java-version")
+    public ResponseEntity<String> getJavaVersion() {
+        return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+    }
+
+    @GetMapping("/contact-info")
+    public ResponseEntity<AccountsContactInfoDto> getContactInfo() {
+        return ResponseEntity.status(HttpStatus.OK).body(accountsContactInfoDto);
     }
 }
